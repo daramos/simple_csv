@@ -1,6 +1,16 @@
 [package]
-
 name = "simple_csv"
 version = "0.0.1"
 authors = ["Daniel Ramos <dan@daramos.com>"]
 description = "A simple CSV parsing implementation"
+documentation = "https://github.com/daramos/simple_csv/"
+homepage = "https://github.com/daramos/simple_csv"
+repository = "https://github.com/daramos/simple_csv"
+readme = "README.md"
+keywords = ["csv", "delimited", "comma"]
+license = "MIT"
+
+
+[lib]
+name = "simple_csv"
+
