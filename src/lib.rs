@@ -9,7 +9,7 @@ use std::io::{IoResult,IoErrorKind};
 // Especially for column lengths <STRING_INITIAL_CAPACITY
 static STRING_INITIAL_CAPACITY: uint = 64u;
 
-enum CurrentParseState {
+enum ParseState {
 	Neutral,
 	InField,
 	InQuotedField,
@@ -18,7 +18,7 @@ enum CurrentParseState {
 }
 
 pub struct SimpleCsv<B: Buffer> {
-	state: CurrentParseState,
+	state: ParseState,
 	row_data: Vec<String>,
 	column_buffer: String,
 	input_reader: B,
@@ -35,7 +35,7 @@ impl<B: Buffer> SimpleCsv<B> {
 	pub fn with_delimiter(buffer: B, delimiter: char)  -> SimpleCsv<B> {
 		
 		SimpleCsv {
-			state : CurrentParseState::Neutral,
+			state : ParseState::Neutral,
 			row_data : Vec::new(),
 			column_buffer : String::with_capacity(STRING_INITIAL_CAPACITY),
 			input_reader : buffer,
@@ -47,7 +47,7 @@ impl<B: Buffer> SimpleCsv<B> {
 	fn new_column(&mut self) {
 		let column_data = replace(&mut self.column_buffer,String::with_capacity(STRING_INITIAL_CAPACITY));
 		self.row_data.push(column_data);
-		self.state = CurrentParseState::Neutral;
+		self.state = ParseState::Neutral;
 	}
 	
 	#[inline]
@@ -56,44 +56,44 @@ impl<B: Buffer> SimpleCsv<B> {
 		let delimiter = self.delimiter;
 		for c in line.chars() {
 			match self.state {
-				CurrentParseState::Neutral => {
+				ParseState::Neutral => {
 					match c {
 						'"' => { //Start of quoted field
-							self.state = CurrentParseState::InQuotedField;
+							self.state = ParseState::InQuotedField;
 						},
 						_ if c==delimiter => { // empty field
 							self.row_data.push(String::new());
 						},
 						'\n' => { // Newline outside of quoted field. End of row.
 							self.new_column();
-							self.state = CurrentParseState::EndOfRow;
+							self.state = ParseState::EndOfRow;
 						},
 						'\r' => { // Return outside of quoted field. Eat it and keep going
 						},
 						_ => { // Anything else is unquoted data
 							self.column_buffer.push(c);
-							self.state = CurrentParseState::InField;
+							self.state = ParseState::InField;
 						}
 					}
 				},
-				CurrentParseState::InQuotedField => {
+				ParseState::InQuotedField => {
 					 match c {
 						'"' => {
-							self.state = CurrentParseState::EncounteredQuoteInQuotedField
+							self.state = ParseState::EncounteredQuoteInQuotedField
 						},
 						_ => { //Anything else is data
 							self.column_buffer.push(c);
 						} 
 					}
 				},
-				CurrentParseState::InField => {
+				ParseState::InField => {
 					 match c {
 						_ if c==delimiter => {
 							self.new_column();
 						},
 						'\n' => {
 							self.new_column();
-							self.state = CurrentParseState::EndOfRow;
+							self.state = ParseState::EndOfRow;
 						},
 						'\r' => { // Return outside of quoted field. Eat it and keep going
 						},
@@ -102,26 +102,26 @@ impl<B: Buffer> SimpleCsv<B> {
 						}
 					}
 				},
-				CurrentParseState::EncounteredQuoteInQuotedField => {
+				ParseState::EncounteredQuoteInQuotedField => {
 					 match c {
 						'"' => { // 2nd " in a row inside quoted field - escaped quote
 							self.column_buffer.push(c);
-							self.state = CurrentParseState::InQuotedField;
+							self.state = ParseState::InQuotedField;
 						},
 						_ if c==delimiter => { // Field separator, end of quoted field
 							self.new_column();
 						},
 						'\n' => { // New line, end of quoted field
 							self.new_column();
-							self.state = CurrentParseState::EndOfRow;
+							self.state = ParseState::EndOfRow;
 						},
 						_ => { // data after quoted field, treat it as data and add to existing data
 							self.column_buffer.push(c);
-							self.state = CurrentParseState::InField;
+							self.state = ParseState::InField;
 						}
 					}
 				},
-				CurrentParseState::EndOfRow => {
+				ParseState::EndOfRow => {
 					assert!(false,"Should never reach match for EndOfRow");
 				},
 				
@@ -133,7 +133,7 @@ impl<B: Buffer> SimpleCsv<B> {
 	pub fn next_row<'b>(&'b mut self) -> IoResult<&'b [String]> {
 		// continually read lines. The match statement below will break once the end of row is reached
 		self.row_data.drain();
-		self.state = CurrentParseState::Neutral;
+		self.state = ParseState::Neutral;
 		let mut line_count = 0u;
 		
 		loop {
@@ -144,7 +144,7 @@ impl<B: Buffer> SimpleCsv<B> {
 					let line = String::from_utf8_lossy(line_bytes.as_slice());
 					self.process_line(&line);
 					match self.state {
-						CurrentParseState::EndOfRow => {
+						ParseState::EndOfRow => {
 							break;
 						},
 						_ => {}
