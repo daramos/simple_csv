@@ -7,7 +7,7 @@ use std::io::{IoResult,IoErrorKind};
 
 // Reserving space for the column Strings initially seems to significantly increase performance
 // Especially for column lengths <STRING_INITIAL_CAPACITY
-static STRING_INITIAL_CAPACITY: uint = 50u;
+static STRING_INITIAL_CAPACITY: uint = 64u;
 
 enum CurrentParseState {
 	Neutral,
@@ -17,22 +17,22 @@ enum CurrentParseState {
 	EndOfRow
 }
 
-pub struct SimpleCsv<'a> {
+pub struct SimpleCsv<B: Buffer> {
 	state: CurrentParseState,
 	row_data: Vec<String>,
 	column_buffer: String,
-	input_reader: &'a mut (Buffer + 'a),
+	input_reader: B,
 	delimiter : char
 }
 
 
-impl<'a> SimpleCsv<'a> {
+impl<B: Buffer> SimpleCsv<B> {
 
-	pub fn new(buffer: &mut Buffer) -> SimpleCsv {
+	pub fn new(buffer: B) -> SimpleCsv<B> {
 		SimpleCsv::with_delimiter(buffer,',')
 	}
 	
-	pub fn with_delimiter(buffer: &mut Buffer, delimiter: char)  -> SimpleCsv {
+	pub fn with_delimiter(buffer: B, delimiter: char)  -> SimpleCsv<B> {
 		
 		SimpleCsv {
 			state : CurrentParseState::Neutral,
@@ -51,7 +51,7 @@ impl<'a> SimpleCsv<'a> {
 	}
 	
 	#[inline]
-	fn process_line<'b>(&mut self,line : Cow<'b, String, str>) {
+	fn process_line<'b>(&mut self, line : &Cow<'b, String, str>) {
 		
 		let delimiter = self.delimiter;
 		for c in line.chars() {
@@ -130,7 +130,6 @@ impl<'a> SimpleCsv<'a> {
 		
 	}
 	
-	#[inline]
 	pub fn next_row<'b>(&'b mut self) -> IoResult<&'b [String]> {
 		// continually read lines. The match statement below will break once the end of row is reached
 		self.row_data.drain();
@@ -143,7 +142,7 @@ impl<'a> SimpleCsv<'a> {
 				Ok(ref line_bytes) => {
 					line_count += 1;
 					let line = String::from_utf8_lossy(line_bytes.as_slice());
-					self.process_line(line);
+					self.process_line(&line);
 					match self.state {
 						CurrentParseState::EndOfRow => {
 							break;
@@ -181,7 +180,7 @@ impl<'a> SimpleCsv<'a> {
 	}	
 }
 
-impl<'a> Iterator<Vec<String>> for SimpleCsv<'a> {
+impl<B: Buffer> Iterator<Vec<String>> for SimpleCsv<B> {
 	fn next(&mut self) -> Option<Vec<String>> {
 		let x = self.next_row().is_ok();
 		match x {
@@ -205,9 +204,9 @@ impl<'a> Iterator<Vec<String>> for SimpleCsv<'a> {
 fn simple_csv_test() {
 	let test_string = "1,2,3\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -219,9 +218,9 @@ fn simple_csv_test() {
 fn quoted_csv_test() {
 	let test_string = "1,\"2\",3\r\n4,\"5\",6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -233,9 +232,9 @@ fn quoted_csv_test() {
 fn quote_in_quoted_csv_test() {
 	let test_string = r#"1,"""2",3"#.to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),r#""2"#.to_string(),"3".to_string()].as_slice()));
 	assert!(parser.next_row().is_err());
@@ -246,9 +245,9 @@ fn quote_in_quoted_csv_test() {
 fn newline_in_quoted_csv_test() {
 	let test_string = "1,\"2\",3\r\n4,\"5\r\n\",6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5\r\n".to_string(),"6".to_string()].as_slice()));
@@ -260,9 +259,9 @@ fn newline_in_quoted_csv_test() {
 fn eof_in_quoted_csv_test() {
 	let test_string = "1,2,3\r\n4,5,\"6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -273,9 +272,9 @@ fn eof_in_quoted_csv_test() {
 fn data_after_quoted_csv_test() {
 	let test_string = "1,2,3\r\n4,5,\"6\"data_after_quoted_field".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6data_after_quoted_field".to_string()].as_slice()));
@@ -286,9 +285,9 @@ fn data_after_quoted_csv_test() {
 fn newline_only_on_last_column() {
 	let test_string = "1,2,3\r\n4,5,\r\n".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"".to_string()].as_slice()));
@@ -300,9 +299,9 @@ fn newline_only_on_last_column() {
 fn empty_line_in_file() {
 	let test_string = "1,2,3\r\n\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["".to_string()].as_slice()));
@@ -316,9 +315,9 @@ fn bad_utf8() {
 	let test_string = "1,2,3\r\n4,5,6".to_string();
 	let mut str_bytes = test_string.into_bytes();
 	str_bytes.push(0xff);
-	let mut test_csv_reader = str_bytes.as_slice();
+	let test_csv_reader = str_bytes.as_slice();
 	
-	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+	let mut parser = SimpleCsv::new(test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
@@ -329,9 +328,9 @@ fn different_delimiter() {
 
 	let test_string = "1|2|3\r\n4|5|6".to_string();
 	let bytes = test_string.into_bytes();
-	let mut test_csv_reader = bytes.as_slice();
+	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsv::with_delimiter(&mut test_csv_reader,'|');
+	let mut parser = SimpleCsv::with_delimiter(test_csv_reader,'|');
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -355,9 +354,9 @@ fn bench_throughput(b: &mut test::Bencher) {
 	
 	b.bytes = total_bytes as u64;
 	b.iter(|| {
-		let mut r = bytes.as_slice();
+		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsv::new(&mut r);
+		let mut parser = SimpleCsv::new(r);
 		while let Ok(_) = parser.next_row() {
 			x+=1;
 		}
@@ -382,9 +381,9 @@ fn bench_throughput_long_columns(b: &mut test::Bencher) {
 	
 	b.bytes = total_bytes as u64;
 	b.iter(|| {
-		let mut r = bytes.as_slice();
+		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsv::new(&mut r);
+		let mut parser = SimpleCsv::new(r);
 		while let Ok(_) = parser.next_row() {
 			x+=1;
 		}
@@ -410,9 +409,9 @@ fn bench_throughput_iter(b: &mut test::Bencher) {
 	
 	b.bytes = total_bytes as u64;
 	b.iter(|| {
-		let mut r = bytes.as_slice();
+		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsv::new(&mut r);
+		let mut parser = SimpleCsv::new(r);
 		for _ in parser {
 			x+=1;
 		}

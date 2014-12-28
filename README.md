@@ -28,7 +28,7 @@ Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.3"
+simple_csv = "~0.0.4"
 ```
 
 ### Simple CSV usage
@@ -37,7 +37,7 @@ let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::new(&mut test_csv_reader);
+let mut parser = SimpleCsv::new(test_csv_reader);
 
 assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -49,7 +49,7 @@ let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::with_delimiter(&mut test_csv_reader,'|');
+let mut parser = SimpleCsv::with_delimiter(test_csv_reader,'|');
 
 assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -62,7 +62,7 @@ let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::with_delimiter(&mut test_csv_reader,'|');
+let mut parser = SimpleCsv::with_delimiter(test_csv_reader,'|');
 
 for row in parser {
 	println!("{}",row);
