@@ -3,7 +3,6 @@ extern crate test;
 use std::vec::Vec;
 use std::mem::replace;
 use std::io::{IoResult,IoErrorKind};
-use test::Bencher;
 
 // Reserving space for the column Strings initially seems to significantly increase performance
 // Especially for column lengths <STRING_INITIAL_CAPACITY
@@ -322,7 +321,7 @@ fn different_delimiter() {
 }
 
 #[bench]
-fn bench_throughput(b: &mut Bencher) {
+fn bench_throughput(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1,\"2\",3,4,\"5\",6\r\n";
 	let total_bytes = seed_string.len() * num_rows;
@@ -349,7 +348,7 @@ fn bench_throughput(b: &mut Bencher) {
 }
 
 #[bench]
-fn bench_throughput_long_columns(b: &mut Bencher) {
+fn bench_throughput_long_columns(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1222222211112,\"231231231231\",3312312312312312312,4312312312312312323123132312312313,\"53123123123123123123123213213\",6233123123123123132\r\n";
 	let total_bytes = seed_string.len() * num_rows;
@@ -377,7 +376,7 @@ fn bench_throughput_long_columns(b: &mut Bencher) {
 
 
 #[bench]
-fn bench_throughput_iter(b: &mut Bencher) {
+fn bench_throughput_iter(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1,\"2\",3,4,\"5\",6\r\n";
 	let total_bytes = seed_string.len() * num_rows;
