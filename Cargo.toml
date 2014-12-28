@@ -1,0 +1,6 @@
+[package]
+
+name = "simple_csv"
+version = "0.0.1"
+authors = ["Daniel Ramos <dan@daramos.com>"]
+description = "A simple CSV parsing implementation"
