@@ -65,6 +65,7 @@ impl<'a> SimpleCsv<'a> {
 							self.row_data.push(String::new());
 						},
 						'\n' => { // Newline outside of quoted field. End of row.
+							self.new_column();
 							self.state = CurrentParseState::EndOfRow;
 						},
 						'\r' => { // Return outside of quoted field. Eat it and keep going
@@ -282,6 +283,20 @@ fn data_after_quoted_csv_test() {
 }
 
 #[test]
+fn newline_only_on_last_column() {
+	let test_string = "1,2,3\r\n4,5,\r\n".to_string();
+	let bytes = test_string.into_bytes();
+	let mut test_csv_reader = bytes.as_slice();
+	
+	let mut parser = SimpleCsv::new(&mut test_csv_reader);
+
+	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"".to_string()].as_slice()));
+	assert!(parser.next_row().is_err());
+	
+}
+
+#[test]
 fn empty_line_in_file() {
 	let test_string = "1,2,3\r\n\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
@@ -290,7 +305,7 @@ fn empty_line_in_file() {
 	let mut parser = SimpleCsv::new(&mut test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec![].as_slice()));
+	assert_eq!(parser.next_row(), Ok(vec!["".to_string()].as_slice()));
 	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
 	assert!(parser.next_row().is_err());
 }

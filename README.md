@@ -17,7 +17,7 @@ In order to accomplish this, it makes the following assumptions:
   4. An EOF in the middle of a quoted field is parsed as if the field was properly closed.
     * `1,2,"3*EOF*` is parsed as `["1","2","3"]`
   5. There is no error for empty lines or varying number of columns per line.
-    * An empty line is parsed as `[]`
+    * An empty line is parsed as `[""]`
 
 ## Limitations
   * Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
@@ -28,7 +28,7 @@ Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.2"
+simple_csv = "~0.0.3"
 ```
 
 ### Simple CSV usage
