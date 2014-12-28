@@ -1,4 +1,5 @@
 # Simple CSV Parser
+[![Build status](https://api.travis-ci.org/daramos/simple_csv.png)](https://travis-ci.org/daramos/simple_csv)
 
 This is a CSV (delimiter can be changed) parser with a focus on:
   1. Simplicity
