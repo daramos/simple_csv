@@ -20,7 +20,7 @@ In order to accomplish this, it makes the following assumptions:
     * An empty line is parsed as `[]`
 
 ## Limitations
-  * It's currently not robust on bad utf8 and throws an error. This will be fixed soon.
+  * Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
   * The iterator implementation forces an allocation for every row.
 
 ## Usage
@@ -28,7 +28,7 @@ Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.1"
+simple_csv = "~0.0.2"
 ```
 
 ### Simple CSV usage

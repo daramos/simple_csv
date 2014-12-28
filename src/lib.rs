@@ -1,5 +1,6 @@
 extern crate test;
 
+use std::borrow::Cow;
 use std::vec::Vec;
 use std::mem::replace;
 use std::io::{IoResult,IoErrorKind};
@@ -50,7 +51,7 @@ impl<'a> SimpleCsv<'a> {
 	}
 	
 	#[inline]
-	fn process_line(&mut self,line : & String) {
+	fn process_line<'b>(&mut self,line : Cow<'b, String, str>) {
 		
 		let delimiter = self.delimiter;
 		for c in line.chars() {
@@ -134,11 +135,13 @@ impl<'a> SimpleCsv<'a> {
 		self.row_data.drain();
 		self.state = CurrentParseState::Neutral;
 		let mut line_count = 0u;
+		
 		loop {
-			let cur_line_result = self.input_reader.read_line();
-			match cur_line_result {
-				Ok(ref line) => {
+			let line_result = self.input_reader.read_until('\n' as u8);
+			match line_result {
+				Ok(ref line_bytes) => {
 					line_count += 1;
+					let line = String::from_utf8_lossy(line_bytes.as_slice());
 					self.process_line(line);
 					match self.state {
 						CurrentParseState::EndOfRow => {
@@ -303,7 +306,7 @@ fn bad_utf8() {
 	let mut parser = SimpleCsv::new(&mut test_csv_reader);
 
 	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
 }
 
 #[test]
