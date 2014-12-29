@@ -23,13 +23,14 @@ In order to accomplish this, it makes the following assumptions:
 ## Limitations
   * Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
   * The iterator implementation forces an allocation for every row.
+  * The return character `\r` in unquoted fields are always discarded
 
 ## Usage
 Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.4"
+simple_csv = "~0.0.5"
 ```
 
 ### Simple CSV usage
@@ -38,7 +39,7 @@ let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::new(test_csv_reader);
+let mut parser = SimpleCsvReader::new(test_csv_reader);
 
 assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -50,7 +51,7 @@ let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::with_delimiter(test_csv_reader,'|');
+let mut parser = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
 
 assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -63,11 +64,24 @@ let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsv::with_delimiter(test_csv_reader,'|');
+let mut parser = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
 
 for row in parser {
 	println!("{}",row);
 }
+```
+
+### Different Text Enclosing Character
+```rust
+let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
+let bytes = test_string.into_bytes();
+let mut test_csv_reader = bytes.as_slice();
+
+let mut parser = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
+
+assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert!(parser.next_row().is_err());
 ```
 
 ## To Do

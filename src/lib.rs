@@ -23,7 +23,9 @@ pub struct SimpleCsvReader<B: Buffer> {
 	row_data: Vec<String>,
 	column_buffer: String,
 	input_reader: B,
-	delimiter : char
+	delimiter : char,
+	text_enclosure: char,
+	newline: char
 }
 
 
@@ -35,14 +37,22 @@ impl<B: Buffer> SimpleCsvReader<B> {
 	
 	pub fn with_delimiter(buffer: B, delimiter: char)  -> SimpleCsvReader<B> {
 		
+		SimpleCsvReader::with_custom_chars(buffer,delimiter,'"','\n')
+	}
+	
+	pub fn with_custom_chars(buffer: B, delimiter: char, text_enclosure: char, newline: char)  -> SimpleCsvReader<B> {
+		
 		SimpleCsvReader {
 			state : ParseState::Neutral,
 			row_data : Vec::new(),
 			column_buffer : String::with_capacity(STRING_INITIAL_CAPACITY),
 			input_reader : buffer,
-			delimiter : delimiter
+			delimiter : delimiter,
+			text_enclosure: text_enclosure,
+			newline: newline
 		}
 	}
+	
 	
 	#[inline]
 	fn new_column(&mut self) {
@@ -58,13 +68,13 @@ impl<B: Buffer> SimpleCsvReader<B> {
 			match self.state {
 				ParseState::Neutral => {
 					match c {
-						'"' => { //Start of quoted field
+						_ if c==self.text_enclosure => { //Start of quoted field
 							self.state = ParseState::InQuotedField;
 						},
 						_ if c==delimiter => { // empty field
 							self.row_data.push(String::new());
 						},
-						'\n' => { // Newline outside of quoted field. End of row.
+						_ if c==self.newline => { // Newline outside of quoted field. End of row.
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
@@ -78,7 +88,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 				},
 				ParseState::InQuotedField => {
 					 match c {
-						'"' => {
+						_ if c==self.text_enclosure => {
 							self.state = ParseState::EncounteredQuoteInQuotedField
 						},
 						_ => { //Anything else is data
@@ -91,7 +101,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 						_ if c==delimiter => {
 							self.new_column();
 						},
-						'\n' => {
+						_ if c==self.newline => {
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
@@ -104,14 +114,14 @@ impl<B: Buffer> SimpleCsvReader<B> {
 				},
 				ParseState::EncounteredQuoteInQuotedField => {
 					 match c {
-						'"' => { // 2nd " in a row inside quoted field - escaped quote
+						_ if c==self.text_enclosure => { // 2nd " in a row inside quoted field - escaped quote
 							self.column_buffer.push(c);
 							self.state = ParseState::InQuotedField;
 						},
 						_ if c==delimiter => { // Field separator, end of quoted field
 							self.new_column();
 						},
-						'\n' => { // New line, end of quoted field
+						_ if c==self.newline => { // New line, end of quoted field
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},

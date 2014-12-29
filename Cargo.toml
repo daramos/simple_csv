@@ -1,6 +1,6 @@
 [package]
 name = "simple_csv"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Daniel Ramos <dan@daramos.com>"]
 description = "A simple CSV parsing implementation"
 documentation = "https://github.com/daramos/simple_csv/"
