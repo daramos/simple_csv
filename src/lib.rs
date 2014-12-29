@@ -216,11 +216,11 @@ fn simple_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 	
 }
 
@@ -230,11 +230,11 @@ fn quoted_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 	
 }
 
@@ -244,10 +244,10 @@ fn quote_in_quoted_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),r#""2"#.to_string(),"3".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),r#""2"#.to_string(),"3".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 	
 }
 
@@ -257,11 +257,11 @@ fn newline_in_quoted_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5\r\n".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5\r\n".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 	
 }
 
@@ -271,11 +271,11 @@ fn eof_in_quoted_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 }
 
 #[test]
@@ -284,11 +284,11 @@ fn data_after_quoted_csv_test() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6data_after_quoted_field".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6data_after_quoted_field".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 }
 
 #[test]
@@ -297,11 +297,11 @@ fn newline_only_on_last_column() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 	
 }
 
@@ -311,12 +311,12 @@ fn empty_line_in_file() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 }
 
 #[test]
@@ -327,10 +327,10 @@ fn bad_utf8() {
 	str_bytes.push(0xff);
 	let test_csv_reader = str_bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::new(test_csv_reader);
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
 }
 
 #[test]
@@ -340,11 +340,24 @@ fn different_delimiter() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 	
-	let mut parser = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
+	let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
 
-	assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-	assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-	assert!(parser.next_row().is_err());
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
+}
+
+#[test]
+fn custom_text_enclosing_char() {
+	let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
+	let bytes = test_string.into_bytes();
+	let test_csv_reader = bytes.as_slice();
+
+	let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
+
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 }
 
 #[bench]
@@ -366,8 +379,8 @@ fn bench_throughput(b: &mut test::Bencher) {
 	b.iter(|| {
 		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsvReader::new(r);
-		while let Ok(_) = parser.next_row() {
+		let mut reader = SimpleCsvReader::new(r);
+		while let Ok(_) = reader.next_row() {
 			x+=1;
 		}
 		assert_eq!(x,num_rows);
@@ -393,8 +406,8 @@ fn bench_throughput_long_columns(b: &mut test::Bencher) {
 	b.iter(|| {
 		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsvReader::new(r);
-		while let Ok(_) = parser.next_row() {
+		let mut reader = SimpleCsvReader::new(r);
+		while let Ok(_) = reader.next_row() {
 			x+=1;
 		}
 		assert_eq!(x,num_rows);
@@ -421,8 +434,8 @@ fn bench_throughput_iter(b: &mut test::Bencher) {
 	b.iter(|| {
 		let r = bytes.as_slice();
 		let mut x=0;
-		let mut parser = SimpleCsvReader::new(r);
-		for _ in parser {
+		let mut reader = SimpleCsvReader::new(r);
+		for _ in reader {
 			x+=1;
 		}
 		assert_eq!(x,num_rows);

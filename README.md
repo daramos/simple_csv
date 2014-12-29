@@ -1,7 +1,7 @@
-# Simple CSV Parser
+# Simple CSV Library
 [![Build status](https://api.travis-ci.org/daramos/simple_csv.png)](https://travis-ci.org/daramos/simple_csv)
 
-This is a CSV (delimiter can be changed) parser with a focus on:
+This is a CSV (delimiter can be changed) reader with a focus on:
   1. Simplicity
   2. Robustness
   3. Performance (to a lesser extent)
@@ -39,34 +39,34 @@ let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
 let mut test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsvReader::new(test_csv_reader);
+let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-assert!(parser.next_row().is_err());
+assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert!(reader.next_row().is_err());
 ```
 ### Different Delimiter
 ```rust
 let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
-let mut test_csv_reader = bytes.as_slice();
+let test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
+let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
 
-assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-assert!(parser.next_row().is_err());
+assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert!(reader.next_row().is_err());
 ```
 
 ### Using a iterator
 ```rust
 let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
-let mut test_csv_reader = bytes.as_slice();
+let test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
+let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
 
-for row in parser {
+for row in reader {
 	println!("{}",row);
 }
 ```
@@ -75,13 +75,13 @@ for row in parser {
 ```rust
 let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
 let bytes = test_string.into_bytes();
-let mut test_csv_reader = bytes.as_slice();
+let test_csv_reader = bytes.as_slice();
 
-let mut parser = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
+let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
 
-assert_eq!(parser.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(parser.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
-assert!(parser.next_row().is_err());
+assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert!(reader.next_row().is_err());
 ```
 
 ## To Do
