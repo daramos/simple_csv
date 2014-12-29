@@ -24,8 +24,7 @@ pub struct SimpleCsvReader<B: Buffer> {
 	column_buffer: String,
 	input_reader: B,
 	delimiter : char,
-	text_enclosure: char,
-	newline: char
+	text_enclosure: char
 }
 
 
@@ -37,10 +36,10 @@ impl<B: Buffer> SimpleCsvReader<B> {
 	
 	pub fn with_delimiter(buffer: B, delimiter: char)  -> SimpleCsvReader<B> {
 		
-		SimpleCsvReader::with_custom_chars(buffer,delimiter,'"','\n')
+		SimpleCsvReader::with_custom_chars(buffer,delimiter,'"')
 	}
 	
-	pub fn with_custom_chars(buffer: B, delimiter: char, text_enclosure: char, newline: char)  -> SimpleCsvReader<B> {
+	pub fn with_custom_chars(buffer: B, delimiter: char, text_enclosure: char)  -> SimpleCsvReader<B> {
 		
 		SimpleCsvReader {
 			state : ParseState::Neutral,
@@ -48,11 +47,9 @@ impl<B: Buffer> SimpleCsvReader<B> {
 			column_buffer : String::with_capacity(STRING_INITIAL_CAPACITY),
 			input_reader : buffer,
 			delimiter : delimiter,
-			text_enclosure: text_enclosure,
-			newline: newline
+			text_enclosure: text_enclosure
 		}
 	}
-	
 	
 	#[inline]
 	fn new_column(&mut self) {
@@ -74,7 +71,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 						_ if c==delimiter => { // empty field
 							self.row_data.push(String::new());
 						},
-						_ if c==self.newline => { // Newline outside of quoted field. End of row.
+						'\n' => { // Newline outside of quoted field. End of row.
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
@@ -101,7 +98,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 						_ if c==delimiter => {
 							self.new_column();
 						},
-						_ if c==self.newline => {
+						'\n' => {
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
@@ -121,7 +118,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 						_ if c==delimiter => { // Field separator, end of quoted field
 							self.new_column();
 						},
-						_ if c==self.newline => { // New line, end of quoted field
+						'\n' => { // New line, end of quoted field
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
@@ -353,7 +350,7 @@ fn custom_text_enclosing_char() {
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
 
-	let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
+	let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#');
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
