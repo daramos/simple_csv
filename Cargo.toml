@@ -14,3 +14,8 @@ license = "MIT"
 [lib]
 name = "simple_csv"
 
+[profile.bench]
+lto = true
+
+[profile.release]
+lto = true
