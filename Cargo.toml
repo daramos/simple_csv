@@ -7,7 +7,7 @@ documentation = "https://github.com/daramos/simple_csv/"
 homepage = "https://github.com/daramos/simple_csv"
 repository = "https://github.com/daramos/simple_csv"
 readme = "README.md"
-keywords = ["csv", "delimited", "comma", "dsv", "tsv", "utf8"]
+keywords = ["csv", "delimited", "comma", "utf8"]
 license = "MIT"
 
 
