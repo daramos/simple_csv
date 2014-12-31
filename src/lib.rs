@@ -22,6 +22,7 @@ pub struct SimpleCsvReader<B: Buffer> {
 	state: ParseState,
 	row_data: Vec<String>,
 	column_buffer: String,
+	column_buffer_ascii: Vec<u8>,
 	input_reader: B,
 	delimiter : char,
 	text_enclosure: char
@@ -47,6 +48,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 			column_buffer : String::with_capacity(STRING_INITIAL_CAPACITY),
 			input_reader : buffer,
 			delimiter : delimiter,
+			column_buffer_ascii : Vec::with_capacity(STRING_INITIAL_CAPACITY),
 			text_enclosure: text_enclosure
 		}
 	}
@@ -56,6 +58,97 @@ impl<B: Buffer> SimpleCsvReader<B> {
 		let column_data = replace(&mut self.column_buffer,String::with_capacity(STRING_INITIAL_CAPACITY));
 		self.row_data.push(column_data);
 		self.state = ParseState::Neutral;
+	}
+	
+	#[inline]
+	fn new_column_ascii(&mut self) {
+		let column_data_ascii = replace(&mut self.column_buffer_ascii,Vec::with_capacity(STRING_INITIAL_CAPACITY));
+		// This is safe because we already validated the line beforehand and we are only splitting the columns on ascii bytes
+		let column_data_as_string = unsafe { String::from_utf8_unchecked(column_data_ascii) };
+		self.row_data.push(column_data_as_string);
+		self.state = ParseState::Neutral;
+	}
+	
+	fn process_line_ascii<'b>(&mut self, line : &mut Vec<u8>) {
+		let text_enclosure = self.text_enclosure as u8;
+		let delimiter = self.delimiter as u8;
+		
+		for c in line.drain() {
+			match self.state {
+				ParseState::Neutral => {
+					match c {
+						_ if c==text_enclosure => { //Start of quoted field
+							self.state = ParseState::InQuotedField;
+						},
+						_ if c==delimiter => { // empty field
+							self.row_data.push(String::new());
+						},
+						b'\n' => { // Newline outside of quoted field. End of row.
+							self.new_column_ascii();
+							self.state = ParseState::EndOfRow;
+						},
+						b'\r' => { // Return outside of quoted field. Eat it and keep going
+						},
+						_ => { // Anything else is unquoted data
+							self.column_buffer_ascii.push(c);
+							self.state = ParseState::InField;
+						}
+					}
+				},
+				ParseState::InQuotedField => {
+					 match c {
+						_ if c==text_enclosure => {
+							self.state = ParseState::EncounteredQuoteInQuotedField
+						},
+						_ => { //Anything else is data
+							self.column_buffer_ascii.push(c);
+						} 
+					}
+				},
+				ParseState::InField => {
+					 match c {
+						_ if c==delimiter => {
+							self.new_column_ascii();
+						},
+						b'\n' => {
+							self.new_column_ascii();
+							self.state = ParseState::EndOfRow;
+						},
+						b'\r' => { // Return outside of quoted field. Eat it and keep going
+						},
+						_ => {
+							self.column_buffer_ascii.push(c);
+						}
+					}
+				},
+				ParseState::EncounteredQuoteInQuotedField => {
+					 match c {
+						_ if c==text_enclosure => { // 2nd " in a row inside quoted field - escaped quote
+							self.column_buffer_ascii.push(c);
+							self.state = ParseState::InQuotedField;
+						},
+						_ if c==delimiter => { // Field separator, end of quoted field
+							self.new_column_ascii();
+						},
+						b'\n' => { // New line, end of quoted field
+							self.new_column_ascii();
+							self.state = ParseState::EndOfRow;
+						},
+						b'\r' => { // Carriage Return after quoted field. discard.
+						},
+						_ => { // data after quoted field, treat it as data and add to existing data
+							self.column_buffer_ascii.push(c);
+							self.state = ParseState::InField;
+						}
+					}
+				},
+				ParseState::EndOfRow => {
+					assert!(false,"Should never reach match for EndOfRow");
+				},
+				
+			}
+		}
+		
 	}
 	
 	fn process_line<'b>(&mut self, line : &Cow<'b, String, str>) {
@@ -145,13 +238,25 @@ impl<B: Buffer> SimpleCsvReader<B> {
 		self.state = ParseState::Neutral;
 		let mut line_count = 0u;
 		
+		let is_ascii = self.delimiter.is_ascii() && self.text_enclosure.is_ascii();
+		
+		
 		loop {
 			let line_result = self.input_reader.read_until('\n' as u8);
 			match line_result {
 				Ok(ref line_bytes) => {
 					line_count += 1;
 					let line = String::from_utf8_lossy(line_bytes.as_slice());
-					self.process_line(&line);
+					match is_ascii {
+						true => {
+							let mut buf = line.into_owned().into_bytes();
+							self.process_line_ascii(&mut buf);
+						},
+						false => {
+							self.process_line(&line);
+						}
+					}
+					
 					match self.state {
 						ParseState::EndOfRow => {
 							break;
@@ -168,9 +273,19 @@ impl<B: Buffer> SimpleCsvReader<B> {
 							
 							// The parser might have left some data in the column_buffer variable since it never encountered a newline.
 							// Add whatever was collected to the current row
-							if !self.column_buffer.is_empty() {
-								self.new_column();
+							match is_ascii {
+								true => {
+									if !self.column_buffer_ascii.is_empty() {
+										self.new_column_ascii();
+									}
+								},
+								false => {
+									if !self.column_buffer.is_empty() {
+										self.new_column();
+									}
+								}
 							}
+							
 							
 							break; 
 						},
@@ -343,6 +458,20 @@ fn bad_utf8() {
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
+}
+
+#[test]
+fn utf8_delimiter() {
+
+	let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
+	let bytes = test_string.into_bytes();
+	let test_csv_reader = bytes.as_slice();
+	
+	let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'\u{00A9}');
+
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
 }
 
 #[test]
