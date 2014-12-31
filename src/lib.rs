@@ -122,6 +122,8 @@ impl<B: Buffer> SimpleCsvReader<B> {
 							self.new_column();
 							self.state = ParseState::EndOfRow;
 						},
+						'\r' => { // Carriage Return after quoted field. discard.
+						},
 						_ => { // data after quoted field, treat it as data and add to existing data
 							self.column_buffer.push(c);
 							self.state = ParseState::InField;
@@ -312,6 +314,19 @@ fn empty_line_in_file() {
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
+}
+
+#[test]
+fn carriage_return_in_data_after_quoted_field() {
+	let test_string = "1,2,\"3\"\r9\r\n4,5,6".to_string();
+	let bytes = test_string.into_bytes();
+	let test_csv_reader = bytes.as_slice();
+	
+	let mut reader = SimpleCsvReader::new(test_csv_reader);
+
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"39".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
 	assert!(reader.next_row().is_err());
 }
