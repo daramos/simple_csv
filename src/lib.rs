@@ -372,6 +372,20 @@ fn custom_text_enclosing_char() {
 	assert!(reader.next_row().is_err());
 }
 
+#[test]
+fn utf8_delimiter() {
+
+	let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
+	let bytes = test_string.into_bytes();
+	let test_csv_reader = bytes.as_slice();
+	
+	let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'\u{00A9}');
+
+	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
+	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+	assert!(reader.next_row().is_err());
+}
+
 #[bench]
 fn bench_throughput(b: &mut test::Bencher) {
 	let num_rows = 10000;
