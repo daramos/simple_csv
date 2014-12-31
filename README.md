@@ -23,14 +23,14 @@ In order to accomplish this, it makes the following assumptions:
 ## Limitations
   * Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
   * The iterator implementation forces an allocation for every row.
-  * The return character `\r` in unquoted fields are always discarded
+  * The return character `\r` in unquoted fields is always discarded
 
 ## Usage
 Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.5"
+simple_csv = "~0.0.6"
 ```
 
 ### Simple CSV usage
