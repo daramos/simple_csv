@@ -2,3 +2,7 @@ language: rust
 
 
 sudo: false
+
+branches:
+  only:
+    - master
