@@ -221,7 +221,7 @@ impl<B: Buffer> Iterator for SimpleCsvReader<B> {
 }
 
 #[test]
-fn simple_csv_test() {
+fn reader_simple_csv_test() {
 	let test_string = "1,2,3\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -235,7 +235,7 @@ fn simple_csv_test() {
 }
 
 #[test]
-fn quoted_csv_test() {
+fn reader_quoted_csv_test() {
 	let test_string = "1,\"2\",3\r\n4,\"5\",6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -249,7 +249,7 @@ fn quoted_csv_test() {
 }
 
 #[test]
-fn quote_in_quoted_csv_test() {
+fn reader_quote_in_quoted_csv_test() {
 	let test_string = r#"1,"""2",3"#.to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -262,7 +262,7 @@ fn quote_in_quoted_csv_test() {
 }
 
 #[test]
-fn newline_in_quoted_csv_test() {
+fn reader_newline_in_quoted_csv_test() {
 	let test_string = "1,\"2\",3\r\n4,\"5\r\n\",6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -276,7 +276,7 @@ fn newline_in_quoted_csv_test() {
 }
 
 #[test]
-fn eof_in_quoted_csv_test() {
+fn reader_eof_in_quoted_csv_test() {
 	let test_string = "1,2,3\r\n4,5,\"6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -289,7 +289,7 @@ fn eof_in_quoted_csv_test() {
 }
 
 #[test]
-fn data_after_quoted_csv_test() {
+fn reader_data_after_quoted_csv_test() {
 	let test_string = "1,2,3\r\n4,5,\"6\"data_after_quoted_field".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -302,7 +302,7 @@ fn data_after_quoted_csv_test() {
 }
 
 #[test]
-fn newline_only_on_last_column() {
+fn reader_newline_only_on_last_column() {
 	let test_string = "1,2,3\r\n4,5,\r\n".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -316,7 +316,7 @@ fn newline_only_on_last_column() {
 }
 
 #[test]
-fn empty_line_in_file() {
+fn reader_empty_line_in_file() {
 	let test_string = "1,2,3\r\n\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -330,7 +330,7 @@ fn empty_line_in_file() {
 }
 
 #[test]
-fn carriage_return_in_data_after_quoted_field() {
+fn reader_carriage_return_in_data_after_quoted_field() {
 	let test_string = "1,2,\"3\"\r9\r\n4,5,6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -343,7 +343,7 @@ fn carriage_return_in_data_after_quoted_field() {
 }
 
 #[test]
-fn bad_utf8() {
+fn reader_bad_utf8() {
 
 	let test_string = "1,2,3\r\n4,5,6".to_string();
 	let mut str_bytes = test_string.into_bytes();
@@ -357,7 +357,7 @@ fn bad_utf8() {
 }
 
 #[test]
-fn different_delimiter() {
+fn reader_different_delimiter() {
 
 	let test_string = "1|2|3\r\n4|5|6".to_string();
 	let bytes = test_string.into_bytes();
@@ -372,7 +372,7 @@ fn different_delimiter() {
 }
 
 #[test]
-fn custom_text_enclosing_char() {
+fn reader_custom_text_enclosing_char() {
 	let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
@@ -386,7 +386,7 @@ fn custom_text_enclosing_char() {
 }
 
 #[test]
-fn utf8_delimiter() {
+fn reader_utf8_delimiter() {
 
 	let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
 	let bytes = test_string.into_bytes();
@@ -401,7 +401,7 @@ fn utf8_delimiter() {
 }
 
 #[bench]
-fn bench_throughput(b: &mut test::Bencher) {
+fn reader_bench_throughput(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1,\"2\",3,4,\"5\",6\r\n";
 	let total_bytes = seed_string.len() * num_rows;
@@ -428,7 +428,7 @@ fn bench_throughput(b: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_throughput_long_columns(b: &mut test::Bencher) {
+fn reader_bench_throughput_long_columns(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1222222211112,\"231231231231\",3312312312312312312,4312312312312312323123132312312313,\"53123123123123123123123213213\",6233123123123123132\r\n";
 	let total_bytes = seed_string.len() * num_rows;
@@ -456,7 +456,7 @@ fn bench_throughput_long_columns(b: &mut test::Bencher) {
 
 
 #[bench]
-fn bench_throughput_iter(b: &mut test::Bencher) {
+fn reader_bench_throughput_iter(b: &mut test::Bencher) {
 	let num_rows = 10000;
 	let seed_string = "1,\"2\",3,4,\"5\",6\r\n";
 	let total_bytes = seed_string.len() * num_rows;
