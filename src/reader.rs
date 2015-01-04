@@ -4,6 +4,7 @@ use std::borrow::Cow;
 use std::vec::Vec;
 use std::mem::replace;
 use std::io::{IoResult,IoErrorKind};
+use std::default::Default;
 
 // Reserving space for the column Strings initially seems to significantly increase performance
 // Especially for column lengths <STRING_INITIAL_CAPACITY
@@ -23,31 +24,40 @@ pub struct SimpleCsvReader<B: Buffer> {
 	row_data: Vec<String>,
 	column_buffer: String,
 	input_reader: B,
-	delimiter : char,
-	text_enclosure: char
+	options: SimpleCsvReaderOptions
 }
+
+#[derive(Copy)]
+pub struct SimpleCsvReaderOptions {
+    delimiter: char,
+    text_enclosure: char
+}
+
+impl Default for SimpleCsvReaderOptions {
+    fn default() -> SimpleCsvReaderOptions {
+        SimpleCsvReaderOptions {
+            delimiter: ',',
+            text_enclosure: '"'
+        }
+    }
+}
+
 
 
 impl<B: Buffer> SimpleCsvReader<B> {
 
 	pub fn new(buffer: B) -> SimpleCsvReader<B> {
-		SimpleCsvReader::with_delimiter(buffer,',')
+		SimpleCsvReader::with_options(buffer,Default::default())
 	}
-	
-	pub fn with_delimiter(buffer: B, delimiter: char)  -> SimpleCsvReader<B> {
-		
-		SimpleCsvReader::with_custom_chars(buffer,delimiter,'"')
-	}
-	
-	pub fn with_custom_chars(buffer: B, delimiter: char, text_enclosure: char)  -> SimpleCsvReader<B> {
+    
+	pub fn with_options(buffer: B, options: SimpleCsvReaderOptions)  -> SimpleCsvReader<B> {
 		
 		SimpleCsvReader {
 			state : ParseState::Neutral,
 			row_data : Vec::new(),
 			column_buffer : String::with_capacity(STRING_INITIAL_CAPACITY),
 			input_reader : buffer,
-			delimiter : delimiter,
-			text_enclosure: text_enclosure
+			options: options
 		}
 	}
 	
@@ -59,13 +69,13 @@ impl<B: Buffer> SimpleCsvReader<B> {
 	}
 	
 	fn process_line<'b>(&mut self, line : &Cow<'b, String, str>) {
-		
-		let delimiter = self.delimiter;
+		let delimiter = self.options.delimiter;
+		let text_enclosure = self.options.text_enclosure;
 		for c in line.chars() {
 			match self.state {
 				ParseState::Neutral => {
 					match c {
-						_ if c==self.text_enclosure => { //Start of quoted field
+						_ if c==text_enclosure => { //Start of quoted field
 							self.state = ParseState::InQuotedField;
 						},
 						_ if c==delimiter => { // empty field
@@ -85,7 +95,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 				},
 				ParseState::InQuotedField => {
 					 match c {
-						_ if c==self.text_enclosure => {
+						_ if c==text_enclosure => {
 							self.state = ParseState::EncounteredQuoteInQuotedField
 						},
 						_ => { //Anything else is data
@@ -111,7 +121,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
 				},
 				ParseState::EncounteredQuoteInQuotedField => {
 					 match c {
-						_ if c==self.text_enclosure => { // 2nd " in a row inside quoted field - escaped quote
+						_ if c==text_enclosure => { // 2nd " in a row inside quoted field - escaped quote
 							self.column_buffer.push(c);
 							self.state = ParseState::InQuotedField;
 						},
@@ -351,8 +361,9 @@ fn different_delimiter() {
 	let test_string = "1|2|3\r\n4|5|6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
-	
-	let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
+	let mut csv_options: SimpleCsvReaderOptions = Default::default();
+	csv_options.delimiter = '|';
+	let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -364,8 +375,9 @@ fn custom_text_enclosing_char() {
 	let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
-
-	let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#');
+    let mut csv_options: SimpleCsvReaderOptions = Default::default();
+	csv_options.text_enclosure = '#';
+	let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
@@ -378,8 +390,9 @@ fn utf8_delimiter() {
 	let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
 	let bytes = test_string.into_bytes();
 	let test_csv_reader = bytes.as_slice();
-	
-	let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'\u{00A9}');
+	let mut csv_options: SimpleCsvReaderOptions = Default::default();
+	csv_options.delimiter = '\u{00A9}';
+	let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
 	assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
 	assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
