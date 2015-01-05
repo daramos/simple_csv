@@ -30,7 +30,7 @@ Add to your Cargo.toml:
 
 ```
 [dependencies]
-simple_csv = "~0.0.6"
+simple_csv = "~0.0.7"
 ```
 
 ### Simple CSV usage

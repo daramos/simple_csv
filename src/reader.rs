@@ -199,7 +199,8 @@ impl<B: Buffer> SimpleCsvReader<B> {
 	}	
 }
 
-impl<B: Buffer> Iterator<Vec<String>> for SimpleCsvReader<B> {
+impl<B: Buffer> Iterator for SimpleCsvReader<B> {
+    type Item = Vec<String>;
 	fn next(&mut self) -> Option<Vec<String>> {
 		let x = self.next_row().is_ok();
 		match x {
