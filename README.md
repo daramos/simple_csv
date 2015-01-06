@@ -1,13 +1,15 @@
 # Simple CSV Library
 [![Build status](https://api.travis-ci.org/daramos/simple_csv.png)](https://travis-ci.org/daramos/simple_csv)
 
-This is a CSV (delimiter can be changed) reader with a focus on:
+This is a CSV (delimiter can be changed) parser & writer with a focus on:
   1. Simplicity
   2. Robustness
   3. Performance (to a lesser extent)
 
-It follows RFC 4180, but allows for non-conformant files to be processed. 
-In order to accomplish this, it makes the following assumptions:
+## Parser
+The parser follows RFC 4180, but allows for non-conformant files to be processed.
+
+In order to achieve this robustness, the parser makes the following assumptions:
 
   1. Commas on the end of a line results in a empty string for that column.
     * `1,2,3,` is parsed as `["1","2","3",""]`
@@ -19,11 +21,12 @@ In order to accomplish this, it makes the following assumptions:
     * `1,2,"3*EOF*` is parsed as `["1","2","3"]`
   5. There is no error for empty lines or varying number of columns per line.
     * An empty line is parsed as `[""]`
+  6. Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
+  7. The return character `\r` in unquoted fields is always discarded.
 
-## Limitations
-  * Lines are assumed to be UTF8 and are decoded "lossily" via Rust's `String::from_utf8_lossy` function.
-  * The iterator implementation forces an allocation for every row.
-  * The return character `\r` in unquoted fields is always discarded
+
+## Writer
+The writer always produces RFC 4180 compliant output and can write to any object that implements the `std::io::Writer` trait.
 
 ## Usage
 Add to your Cargo.toml:
@@ -33,7 +36,7 @@ Add to your Cargo.toml:
 simple_csv = "~0.0.8"
 ```
 
-### Simple CSV usage
+## Simple CSV Parsing usage
 ```rust
 let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
@@ -45,7 +48,7 @@ assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_str
 assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
 assert!(reader.next_row().is_err());
 ```
-### Different Delimiter
+#### Different Delimiter
 ```rust
 let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
@@ -58,7 +61,7 @@ assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_str
 assert!(reader.next_row().is_err());
 ```
 
-### Using a iterator
+#### Using a iterator
 ```rust
 let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
@@ -71,7 +74,7 @@ for row in reader {
 }
 ```
 
-### Different Text Enclosing Character
+#### Different Text Enclosing Character
 ```rust
 let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
 let bytes = test_string.into_bytes();
@@ -84,10 +87,20 @@ assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_str
 assert!(reader.next_row().is_err());
 ```
 
-## To Do
+## Simple CSV Writing Usage
+```rust
+let mut vec = Vec::new();
+let mut writer = SimpleCsvWriter::new(vec);
+let _ = writer.write_all(vec![
+    vec!["1".to_string(),"2".to_string(),"3".to_string()],
+    vec!["4".to_string(),"5".to_string(),"6".to_string()]].as_slice());
+vec = writer.as_inner();
 
-  * Improve malformed UTF8 handling
-  * Implement CSV writer?
-  * Allow the iterator method to return errors somehow?
+let test_string = "1,2,3\n4,5,6";
+assert_eq!(vec, test_string.as_bytes());
+```
+
+## To Do
+  * Allow the iterator method to return errors
   
 
