@@ -55,7 +55,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
     pub fn write(&mut self, row: &[String]) -> IoResult<()> {
         let delimiter = self.options.delimiter;
         let text_enclosure = self.options.text_enclosure;
-        let mut col_number = 0u;
+        let mut col_number = 0us;
         // Only write newline if we have already written at least one row
         if self.row_written {
             match self.options.newline_type {
@@ -66,7 +66,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
                     try!(self.writer.write_str("\r\n"));
                 },
                 NewlineType::Custom(ref newline_str) => {
-                    try!(self.writer.write_str(newline_str.as_slice()));
+                    try!(self.writer.write_str(&**newline_str));
                 }
             }
             
@@ -84,7 +84,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
                             if c == text_enclosure || c == delimiter || c == '\n' || c == '\r'{
                                 is_quoted = true;
                                 try!(self.writer.write_char(text_enclosure));
-                                try!(self.writer.write_str(column.slice_to(byte_index)));
+                                try!(self.writer.write_str(&column[..byte_index]));
                                 // Short circuit the loop so the iterator does not get incremented
                                 continue;
                             }
@@ -106,7 +106,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
             }
             match is_quoted {
                 false => {
-                    try!(self.writer.write_str(column.as_slice()));
+                    try!(self.writer.write_str(&**column));
                 },
                 true => {
                     try!(self.writer.write_char(text_enclosure));
@@ -121,7 +121,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
     
     pub fn write_all(&mut self, rows: &[Vec<String>]) -> IoResult<()> {
         for row in rows.iter() {
-            try!(self.write(row.as_slice()));
+            try!(self.write(&**row));
         }
         Ok(())
     }
@@ -131,9 +131,9 @@ impl<W: Writer> SimpleCsvWriter<W> {
 fn writer_write_all_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
-    let _ = writer.write_all(vec![
+    let _ = writer.write_all(&*vec![
         vec!["1".to_string(),"2".to_string(),"3".to_string()],
-        vec!["4".to_string(),"5".to_string(),"6".to_string()]].as_slice());
+        vec!["4".to_string(),"5".to_string(),"6".to_string()]]);
     vec = writer.as_inner();
     
     let test_string = "1,2,3\n4,5,6";
@@ -145,8 +145,8 @@ fn writer_write_all_test() {
 fn writer_quote_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
-    let _ = writer.write(vec!["1".to_string(),"2\"".to_string(),"3".to_string()].as_slice());
-    let _ = writer.write(vec!["4".to_string(),"\"5".to_string(),"6".to_string()].as_slice());
+    let _ = writer.write(&*vec!["1".to_string(),"2\"".to_string(),"3".to_string()]);
+    let _ = writer.write(&*vec!["4".to_string(),"\"5".to_string(),"6".to_string()]);
     vec = writer.as_inner();
     
     let test_string = "1,\"2\"\"\",3\n4,\"\"\"5\",6";
@@ -158,8 +158,8 @@ fn writer_quote_test() {
 fn writer_delimiter_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
-    let _ = writer.write(vec!["1".to_string(),"2,".to_string(),"3".to_string()].as_slice());
-    let _ = writer.write(vec!["4".to_string(),",5".to_string(),"6".to_string()].as_slice());
+    let _ = writer.write(&*vec!["1".to_string(),"2,".to_string(),"3".to_string()]);
+    let _ = writer.write(&*vec!["4".to_string(),",5".to_string(),"6".to_string()]);
     vec = writer.as_inner();
     
     let test_string = "1,\"2,\",3\n4,\",5\",6";
@@ -171,8 +171,8 @@ fn writer_delimiter_test() {
 fn writer_newline_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
-    let _ = writer.write(vec!["1".to_string(),"2\n".to_string(),"3".to_string()].as_slice());
-    let _ = writer.write(vec!["4".to_string(),",5".to_string(),"6".to_string()].as_slice());
+    let _ = writer.write(&*vec!["1".to_string(),"2\n".to_string(),"3".to_string()]);
+    let _ = writer.write(&*vec!["4".to_string(),",5".to_string(),"6".to_string()]);
     vec = writer.as_inner();
     
     let test_string = "1,\"2\n\",3\n4,\",5\",6";
@@ -187,7 +187,7 @@ fn writer_bench_throughput(b: &mut test::Bencher) {
         
     let mut expected_output = Vec::new();
     let mut tmp_writer = SimpleCsvWriter::new(expected_output);
-    let _ = tmp_writer.write(seed_vec.as_slice());
+    let _ = tmp_writer.write(&*seed_vec);
     expected_output = tmp_writer.as_inner();
     
     let total_bytes = expected_output.len() * num_rows;
@@ -201,7 +201,7 @@ fn writer_bench_throughput(b: &mut test::Bencher) {
     
     b.bytes = total_bytes as u64;
     b.iter(|| {
-        let r = test_vec.as_slice();
+        let r = &*test_vec;
         let output = Vec::with_capacity(total_bytes);
         let mut writer = SimpleCsvWriter::new(output);
         let _ = writer.write_all(r);
@@ -216,7 +216,7 @@ fn writer_bench_throughput_long_columns(b: &mut test::Bencher) {
         
     let mut expected_output = Vec::new();
     let mut tmp_writer = SimpleCsvWriter::new(expected_output);
-    let _ = tmp_writer.write(seed_vec.as_slice());
+    let _ = tmp_writer.write(&*seed_vec);
     expected_output = tmp_writer.as_inner();
     
     let total_bytes = expected_output.len() * num_rows;
@@ -230,7 +230,7 @@ fn writer_bench_throughput_long_columns(b: &mut test::Bencher) {
     
     b.bytes = total_bytes as u64;
     b.iter(|| {
-        let r = test_vec.as_slice();
+        let r = &*test_vec;
         let output = Vec::with_capacity(total_bytes);
         let mut writer = SimpleCsvWriter::new(output);
         let _ = writer.write_all(r);

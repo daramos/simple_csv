@@ -8,7 +8,7 @@ use std::default::Default;
 
 // Reserving space for the column Strings initially seems to significantly increase performance
 // Especially for column lengths <STRING_INITIAL_CAPACITY
-static STRING_INITIAL_CAPACITY: uint = 64u;
+static STRING_INITIAL_CAPACITY: usize = 64us;
 
 enum ParseState {
     Neutral,
@@ -153,14 +153,14 @@ impl<B: Buffer> SimpleCsvReader<B> {
         // continually read lines. The match statement below will break once the end of row is reached
         self.row_data.drain();
         self.state = ParseState::Neutral;
-        let mut line_count = 0u;
+        let mut line_count = 0us;
         
         loop {
             let line_result = self.input_reader.read_until('\n' as u8);
             match line_result {
                 Ok(ref line_bytes) => {
                     line_count += 1;
-                    let line = String::from_utf8_lossy(line_bytes.as_slice());
+                    let line = String::from_utf8_lossy(&**line_bytes);
                     self.process_line(&line);
                     match self.state {
                         ParseState::EndOfRow => {
@@ -194,7 +194,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
             }
         }
 
-        return Ok(self.row_data.as_slice())
+        return Ok(&*self.row_data)
         
     }    
 }
@@ -215,7 +215,7 @@ impl<B: Buffer> Iterator for SimpleCsvReader<B> {
         }
     }
 
-    fn size_hint(&self) -> (uint, Option<uint>) {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         return (0,None);
     }
 }
@@ -224,12 +224,12 @@ impl<B: Buffer> Iterator for SimpleCsvReader<B> {
 fn reader_simple_csv_test() {
     let test_string = "1,2,3\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
     
 }
@@ -238,12 +238,12 @@ fn reader_simple_csv_test() {
 fn reader_quoted_csv_test() {
     let test_string = "1,\"2\",3\r\n4,\"5\",6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
     
 }
@@ -252,11 +252,11 @@ fn reader_quoted_csv_test() {
 fn reader_quote_in_quoted_csv_test() {
     let test_string = r#"1,"""2",3"#.to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),r#""2"#.to_string(),"3".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),r#""2"#.to_string(),"3".to_string()]));
     assert!(reader.next_row().is_err());
     
 }
@@ -265,12 +265,12 @@ fn reader_quote_in_quoted_csv_test() {
 fn reader_newline_in_quoted_csv_test() {
     let test_string = "1,\"2\",3\r\n4,\"5\r\n\",6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5\r\n".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5\r\n".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
     
 }
@@ -279,12 +279,12 @@ fn reader_newline_in_quoted_csv_test() {
 fn reader_eof_in_quoted_csv_test() {
     let test_string = "1,2,3\r\n4,5,\"6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -292,12 +292,12 @@ fn reader_eof_in_quoted_csv_test() {
 fn reader_data_after_quoted_csv_test() {
     let test_string = "1,2,3\r\n4,5,\"6\"data_after_quoted_field".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6data_after_quoted_field".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6data_after_quoted_field".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -305,12 +305,12 @@ fn reader_data_after_quoted_csv_test() {
 fn reader_newline_only_on_last_column() {
     let test_string = "1,2,3\r\n4,5,\r\n".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"".to_string()]));
     assert!(reader.next_row().is_err());
     
 }
@@ -319,13 +319,13 @@ fn reader_newline_only_on_last_column() {
 fn reader_empty_line_in_file() {
     let test_string = "1,2,3\r\n\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -333,12 +333,12 @@ fn reader_empty_line_in_file() {
 fn reader_carriage_return_in_data_after_quoted_field() {
     let test_string = "1,2,\"3\"\r9\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"39".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"39".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -348,12 +348,12 @@ fn reader_bad_utf8() {
     let test_string = "1,2,3\r\n4,5,6".to_string();
     let mut str_bytes = test_string.into_bytes();
     str_bytes.push(0xff);
-    let test_csv_reader = str_bytes.as_slice();
+    let test_csv_reader = &*str_bytes;
     
     let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6\u{FFFD}".to_string()]));
 }
 
 #[test]
@@ -361,13 +361,13 @@ fn reader_different_delimiter() {
 
     let test_string = "1|2|3\r\n4|5|6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     let mut csv_options: SimpleCsvReaderOptions = Default::default();
     csv_options.delimiter = '|';
     let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -375,13 +375,13 @@ fn reader_different_delimiter() {
 fn reader_custom_text_enclosing_char() {
     let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     let mut csv_options: SimpleCsvReaderOptions = Default::default();
     csv_options.text_enclosure = '#';
     let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -390,13 +390,13 @@ fn reader_utf8_delimiter() {
 
     let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
     let bytes = test_string.into_bytes();
-    let test_csv_reader = bytes.as_slice();
+    let test_csv_reader = &*bytes;
     let mut csv_options: SimpleCsvReaderOptions = Default::default();
     csv_options.delimiter = '\u{00A9}';
     let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-    assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-    assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+    assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+    assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
     assert!(reader.next_row().is_err());
 }
 
@@ -417,7 +417,7 @@ fn reader_bench_throughput(b: &mut test::Bencher) {
     
     b.bytes = total_bytes as u64;
     b.iter(|| {
-        let r = bytes.as_slice();
+        let r = &*bytes;
         let mut x=0;
         let mut reader = SimpleCsvReader::new(r);
         while let Ok(_) = reader.next_row() {
@@ -444,7 +444,7 @@ fn reader_bench_throughput_long_columns(b: &mut test::Bencher) {
     
     b.bytes = total_bytes as u64;
     b.iter(|| {
-        let r = bytes.as_slice();
+        let r = &*bytes;
         let mut x=0;
         let mut reader = SimpleCsvReader::new(r);
         while let Ok(_) = reader.next_row() {
@@ -472,7 +472,7 @@ fn reader_bench_throughput_iter(b: &mut test::Bencher) {
     
     b.bytes = total_bytes as u64;
     b.iter(|| {
-        let r = bytes.as_slice();
+        let r = &*bytes;
         let mut x=0;
         let mut reader = SimpleCsvReader::new(r);
         for _ in reader {
