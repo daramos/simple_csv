@@ -1,5 +1,5 @@
 #![crate_name = "simple_csv"]
-#![experimental]
+#![unstable]
 
 pub use reader::SimpleCsvReader;
 pub use writer::SimpleCsvWriter;
