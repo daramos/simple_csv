@@ -194,7 +194,7 @@ fn writer_bench_throughput(b: &mut test::Bencher) {
     
     let mut test_vec = Vec::with_capacity(num_rows);
     
-    for _ in range(0,num_rows) {
+    for _ in (0..num_rows) {
         test_vec.push(seed_vec.clone());
     }
     
@@ -223,7 +223,7 @@ fn writer_bench_throughput_long_columns(b: &mut test::Bencher) {
     
     let mut test_vec = Vec::with_capacity(num_rows);
     
-    for _ in range(0,num_rows) {
+    for _ in (0..num_rows) {
         test_vec.push(seed_vec.clone());
     }
     

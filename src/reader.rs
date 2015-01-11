@@ -408,7 +408,7 @@ fn reader_bench_throughput(b: &mut test::Bencher) {
     
     let mut test_string = String::with_capacity(total_bytes);
     
-    for _ in range(0,num_rows) {
+    for _ in (0..num_rows) {
         test_string.push_str(seed_string);
     }
     
@@ -435,7 +435,7 @@ fn reader_bench_throughput_long_columns(b: &mut test::Bencher) {
     
     let mut test_string = String::with_capacity(total_bytes);
     
-    for _ in range(0,num_rows) {
+    for _ in (0..num_rows) {
         test_string.push_str(seed_string);
     }
     
@@ -463,7 +463,7 @@ fn reader_bench_throughput_iter(b: &mut test::Bencher) {
     
     let mut test_string = String::with_capacity(total_bytes);
     
-    for _ in range(0,num_rows) {
+    for _ in (0..num_rows) {
         test_string.push_str(seed_string);
     }
     
