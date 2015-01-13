@@ -1,3 +1,4 @@
+#[allow(unstable)]
 extern crate test;
 
 use std::default::Default;
@@ -34,6 +35,7 @@ pub struct SimpleCsvWriter<W: Writer> {
     row_written: bool
 }
 
+#[allow(unstable)]
 impl<W: Writer> SimpleCsvWriter<W> {
 
     pub fn new(writer: W) -> SimpleCsvWriter<W>{
@@ -128,6 +130,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
 }
 
 #[test]
+#[allow(unstable)]
 fn writer_write_all_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
@@ -142,6 +145,7 @@ fn writer_write_all_test() {
 }
 
 #[test]
+#[allow(unstable)]
 fn writer_quote_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
@@ -155,6 +159,7 @@ fn writer_quote_test() {
 }
 
 #[test]
+#[allow(unstable)]
 fn writer_delimiter_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
@@ -168,6 +173,7 @@ fn writer_delimiter_test() {
 }
 
 #[test]
+#[allow(unstable)]
 fn writer_newline_test() {
     let mut vec = Vec::new();
     let mut writer = SimpleCsvWriter::new(vec);
@@ -181,6 +187,7 @@ fn writer_newline_test() {
 }
 
 #[bench]
+#[allow(unstable)]
 fn writer_bench_throughput(b: &mut test::Bencher) {
     let num_rows = 10000;
     let seed_vec = vec!["1".to_string(),"\"2".to_string(),"3".to_string()];
@@ -208,6 +215,7 @@ fn writer_bench_throughput(b: &mut test::Bencher) {
     });
 }
 #[bench]
+#[allow(unstable)]
 fn writer_bench_throughput_long_columns(b: &mut test::Bencher) {
     let num_rows = 10000;
     let seed_vec = vec!["111111111111111111111111111111111111111".to_string(),
