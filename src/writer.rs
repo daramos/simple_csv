@@ -2,7 +2,7 @@
 extern crate test;
 
 use std::default::Default;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use std::vec::Vec;
 
 pub enum NewlineType {

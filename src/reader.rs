@@ -4,7 +4,7 @@ extern crate test;
 use std::borrow::Cow;
 use std::vec::Vec;
 use std::mem::replace;
-use std::io::{IoResult,IoErrorKind};
+use std::old_io::{IoResult,IoErrorKind};
 use std::default::Default;
 
 // Reserving space for the column Strings initially seems to significantly increase performance
