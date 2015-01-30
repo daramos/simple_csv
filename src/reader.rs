@@ -1,4 +1,3 @@
-#[allow(unstable)]
 extern crate test;
 
 use std::borrow::Cow;
@@ -44,7 +43,6 @@ impl Default for SimpleCsvReaderOptions {
 }
 
 
-#[allow(unstable)]
 impl<B: Buffer> SimpleCsvReader<B> {
 
     pub fn new(buffer: B) -> SimpleCsvReader<B> {
@@ -222,7 +220,6 @@ impl<B: Buffer> Iterator for SimpleCsvReader<B> {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_simple_csv_test() {
     let test_string = "1,2,3\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
@@ -237,7 +234,6 @@ fn reader_simple_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_quoted_csv_test() {
     let test_string = "1,\"2\",3\r\n4,\"5\",6".to_string();
     let bytes = test_string.into_bytes();
@@ -252,7 +248,6 @@ fn reader_quoted_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_quote_in_quoted_csv_test() {
     let test_string = r#"1,"""2",3"#.to_string();
     let bytes = test_string.into_bytes();
@@ -266,7 +261,6 @@ fn reader_quote_in_quoted_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_newline_in_quoted_csv_test() {
     let test_string = "1,\"2\",3\r\n4,\"5\r\n\",6".to_string();
     let bytes = test_string.into_bytes();
@@ -281,7 +275,6 @@ fn reader_newline_in_quoted_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_eof_in_quoted_csv_test() {
     let test_string = "1,2,3\r\n4,5,\"6".to_string();
     let bytes = test_string.into_bytes();
@@ -295,7 +288,6 @@ fn reader_eof_in_quoted_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_data_after_quoted_csv_test() {
     let test_string = "1,2,3\r\n4,5,\"6\"data_after_quoted_field".to_string();
     let bytes = test_string.into_bytes();
@@ -309,7 +301,6 @@ fn reader_data_after_quoted_csv_test() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_newline_only_on_last_column() {
     let test_string = "1,2,3\r\n4,5,\r\n".to_string();
     let bytes = test_string.into_bytes();
@@ -324,7 +315,6 @@ fn reader_newline_only_on_last_column() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_empty_line_in_file() {
     let test_string = "1,2,3\r\n\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
@@ -339,7 +329,6 @@ fn reader_empty_line_in_file() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_carriage_return_in_data_after_quoted_field() {
     let test_string = "1,2,\"3\"\r9\r\n4,5,6".to_string();
     let bytes = test_string.into_bytes();
@@ -353,7 +342,6 @@ fn reader_carriage_return_in_data_after_quoted_field() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_bad_utf8() {
 
     let test_string = "1,2,3\r\n4,5,6".to_string();
@@ -368,7 +356,6 @@ fn reader_bad_utf8() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_different_delimiter() {
 
     let test_string = "1|2|3\r\n4|5|6".to_string();
@@ -384,7 +371,6 @@ fn reader_different_delimiter() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_custom_text_enclosing_char() {
     let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
     let bytes = test_string.into_bytes();
@@ -399,7 +385,6 @@ fn reader_custom_text_enclosing_char() {
 }
 
 #[test]
-#[allow(unstable)]
 fn reader_utf8_delimiter() {
 
     let test_string = "1\u{00A9}2\u{00A9}3\r\n4\u{00A9}5\u{00A9}6".to_string();
@@ -415,7 +400,6 @@ fn reader_utf8_delimiter() {
 }
 
 #[bench]
-#[allow(unstable)]
 fn reader_bench_throughput(b: &mut test::Bencher) {
     let num_rows = 10000;
     let seed_string = "1,\"2\",3,4,\"5\",6\r\n";
@@ -443,7 +427,6 @@ fn reader_bench_throughput(b: &mut test::Bencher) {
 }
 
 #[bench]
-#[allow(unstable)]
 fn reader_bench_throughput_long_columns(b: &mut test::Bencher) {
     let num_rows = 10000;
     let seed_string = "1222222211112,\"231231231231\",3312312312312312312,4312312312312312323123132312312313,\"53123123123123123123123213213\",6233123123123123132\r\n";
@@ -472,7 +455,6 @@ fn reader_bench_throughput_long_columns(b: &mut test::Bencher) {
 
 
 #[bench]
-#[allow(unstable)]
 fn reader_bench_throughput_iter(b: &mut test::Bencher) {
     let num_rows = 10000;
     let seed_string = "1,\"2\",3,4,\"5\",6\r\n";

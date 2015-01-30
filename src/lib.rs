@@ -1,4 +1,7 @@
 #![crate_name = "simple_csv"]
+#![feature(collections)]
+#![feature(io)]
+#![feature(test)]
 
 pub use reader::SimpleCsvReader;
 pub use writer::SimpleCsvWriter;
@@ -8,12 +11,10 @@ pub mod writer;
 
 #[cfg(test)]
 mod tests {
-    #[allow(unstable)]
     extern crate test;
     use {SimpleCsvWriter, SimpleCsvReader};
 
     #[test]
-    #[allow(unstable)]
     fn reader_and_writer_test() {
         let data = vec![
             vec!["1".to_string(),"2\r\n".to_string(),"3".to_string()],
