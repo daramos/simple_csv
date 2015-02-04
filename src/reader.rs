@@ -473,7 +473,7 @@ fn reader_bench_throughput_iter(b: &mut test::Bencher) {
     b.iter(|| {
         let r = &*bytes;
         let mut x=0;
-        let mut reader = SimpleCsvReader::new(r);
+        let reader = SimpleCsvReader::new(r);
         for _ in reader {
             x+=1;
         }
