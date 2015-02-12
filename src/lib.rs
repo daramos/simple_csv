@@ -2,6 +2,7 @@
 #![feature(collections)]
 #![feature(io)]
 #![feature(test)]
+#![feature(core)]
 
 pub use reader::SimpleCsvReader;
 pub use writer::SimpleCsvWriter;
