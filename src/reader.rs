@@ -159,7 +159,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
             match line_result {
                 Ok(ref line_bytes) => {
                     line_count += 1;
-                    let line = String::from_utf8_lossy(&**line_bytes);
+                    let line = String::from_utf8_lossy(&*line_bytes);
                     self.process_line(&line);
                     match self.state {
                         ParseState::EndOfRow => {
@@ -193,7 +193,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
             }
         }
 
-        return Ok(&*self.row_data)
+        return Ok(&self.row_data)
         
     }    
 }
