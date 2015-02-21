@@ -1,8 +1,5 @@
 #![crate_name = "simple_csv"]
-#![feature(collections)]
-#![feature(io)]
-#![feature(test)]
-#![feature(core)]
+#![feature(collections, old_io, test)]
 
 pub use reader::SimpleCsvReader;
 pub use writer::SimpleCsvWriter;

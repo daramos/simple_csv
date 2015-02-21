@@ -1,6 +1,5 @@
 extern crate test;
 
-use std::borrow::Cow;
 use std::vec::Vec;
 use std::mem::replace;
 use std::old_io::{IoResult,IoErrorKind};
@@ -8,7 +7,7 @@ use std::default::Default;
 
 // Reserving space for the column Strings initially seems to significantly increase performance
 // Especially for column lengths <STRING_INITIAL_CAPACITY
-static STRING_INITIAL_CAPACITY: usize = 64us;
+static STRING_INITIAL_CAPACITY: usize = 64usize;
 
 enum ParseState {
     Neutral,
@@ -67,7 +66,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
         self.state = ParseState::Neutral;
     }
     
-    fn process_line<'b>(&mut self, line : &Cow<'b, String, str>) {
+    fn process_line<'b>(&mut self, line : &str) {
         let delimiter = self.options.delimiter;
         let text_enclosure = self.options.text_enclosure;
         for c in line.chars() {
@@ -152,7 +151,7 @@ impl<B: Buffer> SimpleCsvReader<B> {
         // continually read lines. The match statement below will break once the end of row is reached
         self.row_data.drain();
         self.state = ParseState::Neutral;
-        let mut line_count = 0us;
+        let mut line_count = 0usize;
         
         loop {
             let line_result = self.input_reader.read_until('\n' as u8);

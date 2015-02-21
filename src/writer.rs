@@ -55,7 +55,7 @@ impl<W: Writer> SimpleCsvWriter<W> {
     pub fn write(&mut self, row: &[String]) -> IoResult<()> {
         let delimiter = self.options.delimiter;
         let text_enclosure = self.options.text_enclosure;
-        let mut col_number = 0us;
+        let mut col_number = 0usize;
         // Only write newline if we have already written at least one row
         if self.row_written {
             match self.options.newline_type {
