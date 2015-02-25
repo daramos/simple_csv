@@ -28,8 +28,8 @@ pub struct SimpleCsvReader<B: Buffer> {
 
 #[derive(Copy)]
 pub struct SimpleCsvReaderOptions {
-    delimiter: char,
-    text_enclosure: char
+    pub delimiter: char,
+    pub text_enclosure: char
 }
 
 impl Default for SimpleCsvReaderOptions {

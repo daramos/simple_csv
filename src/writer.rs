@@ -11,9 +11,9 @@ pub enum NewlineType {
 }
 
 pub struct SimpleCsvWriterOptions {
-    delimiter: char,
-    text_enclosure: char,
-    newline_type: NewlineType
+    pub delimiter: char,
+    pub text_enclosure: char,
+    pub newline_type: NewlineType
 }
 
 impl Default for SimpleCsvWriterOptions {

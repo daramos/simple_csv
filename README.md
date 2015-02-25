@@ -40,34 +40,35 @@ simple_csv = "~0.0.8"
 ```rust
 let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
-let mut test_csv_reader = bytes.as_slice();
+let test_csv_reader = &*bytes;
 
 let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
 assert!(reader.next_row().is_err());
 ```
 #### Different Delimiter
 ```rust
 let test_string = "1|2|3\r\n4|5|6".to_string();
 let bytes = test_string.into_bytes();
-let test_csv_reader = bytes.as_slice();
+let test_csv_reader = &*bytes;
+let mut csv_options: SimpleCsvReaderOptions = Default::default();
+csv_options.delimiter = '|';
+let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
-
-assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
 assert!(reader.next_row().is_err());
 ```
 
 #### Using a iterator
 ```rust
-let test_string = "1|2|3\r\n4|5|6".to_string();
+let test_string = "1,2,3\r\n4,5,6".to_string();
 let bytes = test_string.into_bytes();
-let test_csv_reader = bytes.as_slice();
+let test_csv_reader = &*bytes;
 
-let mut reader = SimpleCsvReader::with_delimiter(test_csv_reader,'|');
+let mut reader = SimpleCsvReader::new(test_csv_reader);
 
 for row in reader {
 	println!("{}",row);
@@ -78,12 +79,13 @@ for row in reader {
 ```rust
 let test_string = "1,#2#,3\r\n#4#,5,6".to_string();
 let bytes = test_string.into_bytes();
-let test_csv_reader = bytes.as_slice();
+let test_csv_reader = &*bytes;
+let mut csv_options: SimpleCsvReaderOptions = Default::default();
+csv_options.text_enclosure = '#';
+let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-let mut reader = SimpleCsvReader::with_custom_chars(test_csv_reader, ',', '#', '\n');
-
-assert_eq!(reader.next_row(), Ok(vec!["1".to_string(),"2".to_string(),"3".to_string()].as_slice()));
-assert_eq!(reader.next_row(), Ok(vec!["4".to_string(),"5".to_string(),"6".to_string()].as_slice()));
+assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
+assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
 assert!(reader.next_row().is_err());
 ```
 
@@ -91,9 +93,9 @@ assert!(reader.next_row().is_err());
 ```rust
 let mut vec = Vec::new();
 let mut writer = SimpleCsvWriter::new(vec);
-let _ = writer.write_all(vec![
+let _ = writer.write_all(&vec![
     vec!["1".to_string(),"2".to_string(),"3".to_string()],
-    vec!["4".to_string(),"5".to_string(),"6".to_string()]].as_slice());
+    vec!["4".to_string(),"5".to_string(),"6".to_string()]]);
 vec = writer.as_inner();
 
 let test_string = "1,2,3\n4,5,6";
