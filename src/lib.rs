@@ -1,5 +1,5 @@
 #![crate_name = "simple_csv"]
-#![feature(collections, old_io, test)]
+#![cfg_attr(all(test, feature = "nightly"), feature(test))]
 
 pub use reader::SimpleCsvReader;
 pub use reader::SimpleCsvReaderOptions;
@@ -14,7 +14,6 @@ pub mod writer;
 
 #[cfg(test)]
 mod tests {
-    extern crate test;
     use std::default::Default;
     use super::*;
 
@@ -29,9 +28,9 @@ mod tests {
         let written_data = writer.as_inner();
 
         let mut reader = SimpleCsvReader::new(&*written_data);
-        assert_eq!(reader.next_row(), Ok(&*data[0]));
-        assert_eq!(reader.next_row(), Ok(&*data[1]));
-        assert!(reader.next_row().is_err());
+        assert_eq!(reader.next_row().unwrap().unwrap(), &*data[0]);
+        assert_eq!(reader.next_row().unwrap().unwrap(), &*data[1]);
+        assert!(reader.next_row().is_none());
 
     }
 
@@ -53,9 +52,9 @@ mod tests {
         reader_options.delimiter = '#';
 
         let mut reader = SimpleCsvReader::with_options(&*written_data, reader_options);
-        assert_eq!(reader.next_row(), Ok(&*data[0]));
-        assert_eq!(reader.next_row(), Ok(&*data[1]));
-        assert!(reader.next_row().is_err());
+        assert_eq!(reader.next_row().unwrap().unwrap(), &*data[0]);
+        assert_eq!(reader.next_row().unwrap().unwrap(), &*data[1]);
+        assert!(reader.next_row().is_none());
 
     }
 }
