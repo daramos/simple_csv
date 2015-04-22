@@ -154,7 +154,7 @@ impl<B: BufRead> SimpleCsvReader<B> {
         // Reset state
         self.row_data.truncate(0);
         self.state = ParseState::Neutral;
-        let mut line_count = 0us;
+        let mut line_count = 0usize;
         
         // continually read lines. The match statement below will break once the end of row is reached
         loop {
