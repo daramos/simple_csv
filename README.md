@@ -26,7 +26,7 @@ In order to achieve this robustness, the parser makes the following assumptions:
 
 
 ## Writer
-The writer always produces RFC 4180 compliant output and can write to any object that implements the `std::io::Writer` trait.
+The writer always produces RFC 4180 compliant output and can write to any object that implements the `std::io::Write` trait.
 
 ## Usage
 Add to your Cargo.toml:
@@ -44,9 +44,9 @@ let test_csv_reader = &*bytes;
 
 let mut reader = SimpleCsvReader::new(test_csv_reader);
 
-assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
-assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
-assert!(reader.next_row().is_err());
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["1".to_string(),"2".to_string(),"3".to_string()]);
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["4".to_string(),"5".to_string(),"6".to_string()]);
+assert!(reader.next_row().is_none());
 ```
 #### Different Delimiter
 ```rust
@@ -57,9 +57,9 @@ let mut csv_options: SimpleCsvReaderOptions = Default::default();
 csv_options.delimiter = '|';
 let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
-assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
-assert!(reader.next_row().is_err());
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["1".to_string(),"2".to_string(),"3".to_string()]);
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["4".to_string(),"5".to_string(),"6".to_string()]);
+assert!(reader.next_row().is_none());
 ```
 
 #### Using a iterator
@@ -84,9 +84,9 @@ let mut csv_options: SimpleCsvReaderOptions = Default::default();
 csv_options.text_enclosure = '#';
 let mut reader = SimpleCsvReader::with_options(test_csv_reader,csv_options);
 
-assert_eq!(reader.next_row(), Ok(&*vec!["1".to_string(),"2".to_string(),"3".to_string()]));
-assert_eq!(reader.next_row(), Ok(&*vec!["4".to_string(),"5".to_string(),"6".to_string()]));
-assert!(reader.next_row().is_err());
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["1".to_string(),"2".to_string(),"3".to_string()]);
+assert_eq!(reader.next_row().unwrap().unwrap(), &*vec!["4".to_string(),"5".to_string(),"6".to_string()]);
+assert!(reader.next_row().is_none());
 ```
 
 ## Simple CSV Writing Usage
@@ -102,7 +102,4 @@ let test_string = "1,2,3\n4,5,6";
 assert_eq!(vec, test_string.as_bytes());
 ```
 
-## To Do
-  * Allow the iterator method to return errors
-  
 
